@@ -16,6 +16,7 @@ class Presenter {
         this.view.bindSearchNote();
         this.view.bindDragDrog();
         this.view.bindUndo();
+        this.view.bindEditTitle();
 
         //Display initial notes
         this.onNotesListChanged(this.oldNotes);
@@ -27,6 +28,7 @@ class Presenter {
         pubsub.subscribe(`searchNote`, this.handleSearchNote);
         pubsub.subscribe(`dragDrop`, this.handleDragDrop);
         pubsub.subscribe(`undoAction`, this.handleUndo);
+        pubsub.subscribe(`editNotetitle`, this.handleEditTitle)
     }
 
     onNotesListChanged = notes => {
@@ -41,6 +43,11 @@ class Presenter {
     handleEditNote = (args) => {
         const editNoteCommand = new EditEvent(this.model, this.view);
         this.eventhandler.executeCommand(editNoteCommand, args);
+    }
+
+    handleEditTitle = (args) => {
+        const editTitleCommand = new EditTitleEvent(this.model, this.view);
+        this.eventhandler.executeCommand(editTitleCommand, args);
     }
 
     handleDeleteNote = (args) => {
@@ -142,6 +149,31 @@ class EditEvent {
     }
 }
 
+
+class EditTitleEvent {
+    constructor(model, view) {
+        this.model = model;
+        this.view = view;
+        this.previousNote = [];
+    }
+
+    execute(args) {
+        const id = args.id;
+        const title = args.title;
+        const noteToSave = this.model.getAllNotes().filter(element => element.id == id);
+        const copy = JSON.parse(JSON.stringify(noteToSave));
+        this.previousNote.push(copy);
+        this.model.saveTitle({ id, title });
+        this.view.displayNotes(this.model.getAllNotes());
+    }
+
+    undo() {
+        const lastNote = this.previousNote.pop();
+        lastNote[0].undoUpdate = lastNote[0].updated;
+        this.model.saveTitle(lastNote[0]);
+        this.view.displayNotes(this.model.getAllNotes());
+    }
+}
 
 class DragCommand {
     constructor(model, view) {

@@ -13,23 +13,26 @@ export default class View {
         this.notesList.innerHTML = "";
 
         notes.forEach(note => {
-            const html = this.createListItemHTML(note.id, note.content, note.create, note.updated);
+            const html = this.createListItemHTML(note.id, note.content,note.title ,note.create, note.updated);
             this.notesList.appendChild(html);
         });
     }
 
-    createListItemHTML(id, content, created, updated = new Date()) {
+    createListItemHTML(id, content, title, created, updated = new Date()) {
         const fragment = document.createDocumentFragment();
         const template = document.querySelector(".template").content;
         const cont = template.querySelector(".container");
         const note = template.querySelector(".note");
+        const notetitle = template.querySelector(".title");
         const noteCreate = template.querySelector(".note-creation");
         const noteUpdate = template.querySelector(".note-update");
 
         cont.setAttribute("data-note-id", id);
         cont.setAttribute("id", id);
         note.setAttribute("id", id);
+        notetitle.setAttribute("id", id);
         note.innerHTML = content;
+        notetitle.value = title;
         noteCreate.innerHTML = `Created: ${created.toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })}`;
         noteUpdate.setAttribute("id", id);
         noteUpdate.innerHTML = `Updated: ${updated.toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })}`;
@@ -83,6 +86,50 @@ export default class View {
                     chart ? chart.remove() : chart;
                     item.stopPropagation();
                     pubsub.publish(`editNote`, { content: event.target.value.trim(), id: noteContainer.dataset.noteId, updatedUndo: date });
+                });
+            }
+        });
+
+        this.notesList.addEventListener('keydown', function (e) {
+
+            if (e.key == 'Tab' && e.target.className === "note") {
+                e.preventDefault();
+                const start = e.target.selectionStart;
+                const end = e.target.selectionEnd;
+
+                e.target.value = e.target.value.substring(0, start) + "\t" + e.target.value.substring(end);
+                e.target.selectionEnd = start + 1;
+            }
+        });
+    }
+
+    bindEditTitle() {
+        const fragment = document.createDocumentFragment();
+        const template = document.querySelector('.template2').content;
+
+        this.notesList.addEventListener('dblclick', event => {
+            if (event.target.className === 'title') {
+                const note = event.target;
+                const noteContainer = event.target.parentElement;
+                const date = event.target.parentElement.querySelector('.note-update').textContent;
+                note.style.backgroundColor = 'rgb(176, 172, 172)';
+
+                note.readOnly = false;
+
+                note.addEventListener('input', item => {
+                    if (!noteContainer.querySelector('.not-saved')) {
+                        const clone = template.cloneNode(true);
+                        fragment.appendChild(clone);
+                        noteContainer.appendChild(fragment);
+
+                    }
+                    item.stopPropagation();
+                });
+                note.addEventListener('focusout', item => {
+                    const chart = event.target.parentElement.querySelector(`.not-saved`);
+                    chart ? chart.remove() : chart;
+                    item.stopPropagation();
+                    pubsub.publish(`editNotetitle`, { title: event.target.value.trim(), id: noteContainer.dataset.noteId, updatedUndo: date });
                 });
             }
         });

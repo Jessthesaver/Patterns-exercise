@@ -15,6 +15,7 @@ export default class Model {
             noteObject = {
                 id: Date.now(),
                 content: "",
+                title: "",
                 create: `${new Date().toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" })}`
             }
             notes.push(noteObject);
@@ -36,6 +37,21 @@ export default class Model {
                 existing.updated = new Date().toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" });
             } else if (existing.content !== noteToSave.content && noteToSave.undoUpdate !== undefined) {
                 existing.content = noteToSave.content;
+                existing.updated = noteToSave.undoUpdate;
+            }
+            localStorage.setItem("stickynotes-notes", JSON.stringify(notes));
+        }
+    }
+
+    saveTitle(noteToSave) {
+        const notes = this.getAllNotes();
+        const existing = notes.find(note => note.id == noteToSave.id);
+        if (existing) {
+            if (existing.title !== noteToSave.title && noteToSave.undoUpdate === undefined) {
+                existing.title = noteToSave.title;
+                existing.updated = new Date().toLocaleString(undefined, { dateStyle: "full", timeStyle: "short" });
+            } else if (existing.title !== noteToSave.title && noteToSave.undoUpdate !== undefined) {
+                existing.title = noteToSave.title;
                 existing.updated = noteToSave.undoUpdate;
             }
             localStorage.setItem("stickynotes-notes", JSON.stringify(notes));
