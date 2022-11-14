@@ -147,20 +147,17 @@ export default class View {
         });
     }
 
-    filterNotes(found, value) {
+    filterNotes(found) {
         const containers = document.getElementsByClassName("container");
+        for (const i in containers) {
+            if (typeof containers[i] == 'object') {
+                containers[i].classList.toggle("hide", false);
+            }
+        }
         found.forEach(element => {
             const container = document.getElementById(`${element.id}`);
             container.classList.toggle("hide", element.id);
         });
-        if (value.length <= 0) {
-            for (const i in containers) {
-                if (typeof containers[i] == 'object') {
-                    containers[i].classList.toggle("hide", false);
-                }
-            }
-        }
-
     }
 
     bindUndo() {
